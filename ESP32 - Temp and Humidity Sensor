@@ -1,0 +1,31 @@
+#include "DHTesp.h"
+#define LEDR 25
+#define LEDB 26
+#define SENSOR 15
+DHTesp sensordht;
+
+void setup() {
+  Serial.begin(115200);
+  sensordht.setup(SENSOR, DHTesp::DHT22);
+  pinMode(LEDR, OUTPUT); pinMode(LEDB, OUTPUT);
+}
+
+void loop() {
+  delay(5000);
+  int temp = sensordht.getTemperature();
+  int umi = sensordht.getHumidity();
+  Serial.println("Temperatura: " + String(temp) + "°C");
+  Serial.println("Umidade: " + String(umi) + "%");
+
+  if (temp > 35){
+    digitalWrite(LEDR, HIGH);
+  } else {
+    digitalWrite(LEDR, LOW);
+  }
+
+  if(umi > 70){
+    digitalWrite(LEDB, HIGH);
+  } else {
+    digitalWrite(LEDB, LOW);
+  }
+}
