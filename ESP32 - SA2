@@ -1,0 +1,62 @@
+#include "DHTesp.h" //Inclusão das bibliotecas necessárias para realizar o
+#include <WiFi.h>   //projeto
+#include <HTTPClient.h>
+#include "ThingSpeak.h"
+
+#define LEDR 25 //Definindo a pinagem dos leds e do sensor, afim de obter
+#define LEDB 26 //resultados digitais e visuais
+#define SENSOR 15
+DHTesp sensordht;
+
+const char* ssid = "Wokwi-GUEST"; // Definindo a conexão da ESP32, com o
+const char* password = "";         //ThingSpeak e com a internet
+unsigned long ChannelNumber = 2101205 ;
+const char * APIKey = "660E6ZPE2ILGZDVF" ;
+WiFiClient  client;
+HTTPClient http;
+
+void setup() {
+  Serial.begin(115200);
+  sensordht.setup(SENSOR, DHTesp::DHT22);
+  pinMode(LEDR, OUTPUT); pinMode(LEDB, OUTPUT); //Configurando a pinagem 
+  WiFi.begin(ssid, password);                   //para que mande energia
+
+  while(WiFi.status() != WL_CONNECTED){
+    delay(500);
+    Serial.println("Conectando no Wifi...");
+    }
+  
+  Serial.println("Conectado");
+  WiFi.mode(WIFI_STA);
+  ThingSpeak.begin(client); //Iniciando conexão com o ThingSpeak
+}
+
+void loop() {
+  delay(20000);
+  int temp = sensordht.getTemperature();
+  int umi = sensordht.getHumidity();
+  Serial.println("Temperatura: " + String(temp) + "°C");
+  Serial.println("Umidade: " + String(umi) + "%");
+  ThingSpeak.setField(1, temp);
+  ThingSpeak.setField(2, umi);
+
+  if (temp > 35){
+    digitalWrite(LEDR, HIGH);
+  } else {
+    digitalWrite(LEDR, LOW);
+  }
+
+  if(umi > 70){
+    digitalWrite(LEDB, HIGH);
+  } else {
+    digitalWrite(LEDB, LOW);
+  }
+
+int x = ThingSpeak.writeFields(ChannelNumber, APIKey);
+  if(x == 200){
+    Serial.println("Dados Atualizados com sucesso");
+  }
+  else{
+    Serial.println("Problema ao enviar os dados, erro " + String(x));
+  }
+}
